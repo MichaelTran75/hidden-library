@@ -2581,7 +2581,7 @@
       img.src = src;
       return t;
     }
-    let inkReady = false, dishReady = false, dishTex = null, oldTex = null, swapStart = 0;
+    let inkReady = false, dishReady = false, dishTex = null, dishSrc = '', oldTex = null, swapStart = 0;
     const SWAP_MS = 2400;   // old record lifts off and slides out, the new one glides in and drops
     const inkTex = texture('data:image/png;base64,' + ASSET.tex, gl.LUMINANCE, () => { inkReady = true; });
 
@@ -2754,6 +2754,8 @@
       setPlaying(on) { st.playing = on; st.targetSpeed = on ? OMEGA : 0; if (!swapStart) st.armTarget = on ? armFor(st.progress) : ARM.rest; request(); },
       setProgress(p) { st.progress = p; if (st.playing && !swapStart) { st.armTarget = armFor(p); request(); } },
       setDish(url) {
+        if (url === dishSrc) return;   // same record (e.g. first play of the default song): no swap
+        dishSrc = url;
         const t = texture(url, gl.RGBA, () => {
           if (dishTex && dishReady && !reduce) {
             if (oldTex) gl.deleteTexture(oldTex);   // a swap was already running: drop the oldest record
