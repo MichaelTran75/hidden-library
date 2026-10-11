@@ -2611,9 +2611,8 @@
     const OMEGA = 33.333 / 60 * Math.PI * 2 * .25;   // a quarter of 33⅓ rpm: a calm spin
     const PL = M.platter, PV = M.pivot, ARM = M.arm;
     const VIEW = { yaw: Math.PI / 2, pitch: .66 };   // default: front of the deck facing the screen
-    const view0 = hooks.view || VIEW;
     const st = { angle: 0, speed: 0, targetSpeed: 0, arm: ARM.rest, armTarget: ARM.rest, playing: false, progress: 0,
-      yaw: view0.yaw, yawTarget: view0.yaw, pitch: view0.pitch, pitchTarget: view0.pitch };
+      yaw: VIEW.yaw, yawTarget: VIEW.yaw, pitch: VIEW.pitch, pitchTarget: VIEW.pitch, viewEase: 6 };
     const theme = { paper: [0.94, 0.91, 0.84], ink: [0.17, 0.14, 0.11], dim: 1 };
     const light = (() => { const v = [-0.45, 0.85, 0.35], l = Math.hypot(...v); return v.map(x => x / l); })();
     const reduce = hooks.reduceMotion;
@@ -2706,9 +2705,9 @@
       st.angle = (st.angle - st.speed * dt) % (Math.PI * 2);
       st.arm += (st.armTarget - st.arm) * Math.min(1, dt * 1.6);
       if (Math.abs(st.armTarget - st.arm) < .0008) st.arm = st.armTarget;
-      st.yaw += (st.yawTarget - st.yaw) * Math.min(1, dt * 6);
+      st.yaw += (st.yawTarget - st.yaw) * Math.min(1, dt * st.viewEase);
       if (Math.abs(st.yawTarget - st.yaw) < .001) st.yaw = st.yawTarget;
-      st.pitch += (st.pitchTarget - st.pitch) * Math.min(1, dt * 6);
+      st.pitch += (st.pitchTarget - st.pitch) * Math.min(1, dt * st.viewEase);
       if (Math.abs(st.pitchTarget - st.pitch) < .001) st.pitch = st.pitchTarget;
       if (swapStart && now - swapStart >= SWAP_MS) {
         swapStart = 0;
@@ -2721,30 +2720,33 @@
     }
     function armFor(p) { return ARM.outer + (ARM.inner - ARM.outer) * Math.max(0, Math.min(1, p)); }
 
-    // Hold the right mouse button and drag to turn the player; a right click without dragging restores the front view.
+    // Hold the right mouse button and drag to turn the player; on release it glides back to the front view.
     let drag = null;
     surface.addEventListener('contextmenu', e => e.preventDefault());
     surface.addEventListener('pointerdown', e => {
       if (e.button !== 2) return;
       e.preventDefault();
-      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      st.viewEase = 6;
       surface.setPointerCapture(e.pointerId);
       surface.classList.add('is-turning');
     });
     surface.addEventListener('pointermove', e => {
       if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-      drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
+      drag.x = e.clientX; drag.y = e.clientY;
       st.yawTarget -= dx * .012;
       st.pitchTarget = Math.max(.25, Math.min(1.35, st.pitchTarget + dy * .008));
       request();
     });
     function endDrag(e) {
       if (!drag || e.pointerId !== drag.id) return;
-      if (drag.moved < 4) { st.yawTarget = VIEW.yaw; st.pitchTarget = VIEW.pitch; request(); }
       drag = null;
       surface.classList.remove('is-turning');
-      hooks.saveView && hooks.saveView({ yaw: st.yawTarget, pitch: st.pitchTarget });
+      const turns = Math.round((st.yaw - VIEW.yaw) / (Math.PI * 2));   // unwind whole turns so it takes the short way back
+      st.yaw -= turns * Math.PI * 2;
+      st.yawTarget = VIEW.yaw; st.pitchTarget = VIEW.pitch; st.viewEase = 2.5;
+      request();
     }
     surface.addEventListener('pointerup', endDrag);
     surface.addEventListener('pointercancel', endDrag);
@@ -2782,7 +2784,7 @@
 
   // Start the 3D player once the page is idle; keep the 2D record if WebGL is missing or lost.
   let tt = null;
-  const VIEW_KEY = 'hiddenLibrary.view';
+  try { localStorage.removeItem('hiddenLibrary.view'); } catch (e) { /* no storage */ }   // views are no longer saved
   const deck = $('.deck');
   (window.requestIdleCallback || (fn => setTimeout(fn, 200)))(() => {
     const node = $('#tt-asset');
@@ -2790,11 +2792,8 @@
     try {
       const asset = JSON.parse(node.textContent);
       node.remove();
-      const v = store.get(VIEW_KEY, null);
       tt = createTurntable($('#tt-canvas'), asset, {
         reduceMotion,
-        view: v && Number.isFinite(v.yaw) && Number.isFinite(v.pitch) ? { yaw: v.yaw % (Math.PI * 2), pitch: Math.max(.25, Math.min(1.35, v.pitch)) } : null,
-        saveView: v => store.set(VIEW_KEY, v),
         paused: () => document.hidden || body.classList.contains('is-idle'),
         lost: () => { tt = null; deck.classList.remove('is-3d'); }
       });
