@@ -4,7 +4,7 @@ Thư viện sách nói và tài liệu nghiên cứu của MichaelTran, viết d
 
 - **Nội dung:** Books (sách nói) và Research (Kinh tế · Nông nghiệp & Thuỷ sản · Địa lý), trời ngày/đêm theo giờ thật, song ngữ EN/VI.
 - **Máy đĩa than 3D:** trình vẽ WebGL1 viết tay (không dùng three.js). Chuột trái: phát / dừng · giữ chuột phải và kéo: xoay máy, nhả ra máy tự về mặt trước · ♬: đổi đĩa.
-- **Đĩa 3:** phát YouTube mix "CITY POP 1986 / Night Drive Playlist" trong khung YouTube ở sidebar, ngay trên máy đĩa.
+- **Đĩa 2 và 3:** phát YouTube mix ("Nhạc Chill TikTok – Lofi Chill" và "CITY POP 1986 / Night Drive Playlist") trong khung YouTube ở sidebar, ngay trên máy đĩa.
 
 ## Ghi công
 
