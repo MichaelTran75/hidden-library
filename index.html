@@ -842,7 +842,7 @@
   .deck.is-3d .next-song { right: -2px; bottom: -6px; }
   .credit { margin: 14px auto 0; max-width: 419px; font-size: 12px; line-height: 1.5; color: rgba(0, 0, 0, .7); text-align: center; }
   .credit a { color: inherit; }
-  .disc.is-spinning img { animation: spin 10s linear infinite; }
+  .disc.is-spinning img { animation: spin 20s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .tonearm {
     position: absolute;
@@ -2608,7 +2608,7 @@
     const IDENT = spinAbout(0, 0, 0);
 
     // ---- state
-    const OMEGA = 33.333 / 60 * Math.PI * 2 * .5;   // half of 33⅓ rpm: a calmer spin
+    const OMEGA = 33.333 / 60 * Math.PI * 2 * .25;   // a quarter of 33⅓ rpm: a calm spin
     const PL = M.platter, PV = M.pivot, ARM = M.arm;
     const VIEW = { yaw: Math.PI / 2, pitch: .66 };   // default: front of the deck facing the screen
     const view0 = hooks.view || VIEW;
